@@ -1,0 +1,20 @@
+{
+  "$schema": "https://rork.com/schema/rork.json",
+  "apps": [
+    {
+      "name": "CuanTrack",
+      "path": "ios-cuantrack",
+      "framework": "swift"
+    },
+    {
+      "name": "CuanTrack Android",
+      "path": "android-cuantrack",
+      "framework": "kotlin"
+    },
+    {
+      "name": "Backend",
+      "path": "backend",
+      "framework": "supabase"
+    }
+  ]
+}
