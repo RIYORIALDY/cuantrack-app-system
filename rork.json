@@ -4,7 +4,10 @@
     {
       "name": "CuanTrack",
       "path": "ios-cuantrack",
-      "framework": "swift"
+      "framework": "swift",
+      "settings": {
+        "displayName": "CuanTrack"
+      }
     },
     {
       "name": "CuanTrack Android",
