@@ -6,6 +6,7 @@ import SwiftUI
 final class FinanceStore {
     var accounts: [Account] = FinanceStore.defaultAccounts
     var transactions: [Transaction] = FinanceStore.defaultTransactions
+    var budgets: [BudgetCategory] = FinanceStore.defaultBudgets
     var showToast: Bool = false
     var toastMessage: String = ""
 
@@ -27,6 +28,51 @@ final class FinanceStore {
 
     var recentTransactions: [Transaction] {
         Array(transactions.prefix(5))
+    }
+
+    var totalBudgeted: Double {
+        budgets.reduce(0) { $0 + $1.monthlyLimit }
+    }
+
+    var totalSpentThisMonth: Double {
+        currentMonthExpenses.reduce(0) { $0 + $1.amount }
+    }
+
+    var remainingBudget: Double {
+        totalBudgeted - totalSpentThisMonth
+    }
+
+    var budgetPercentUsed: Double {
+        guard totalBudgeted > 0 else { return 0 }
+        return min(totalSpentThisMonth / totalBudgeted, 1.0)
+    }
+
+    var currentMonthExpenses: [Transaction] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) else {
+            return []
+        }
+        return transactions.filter { $0.type == .expense && $0.date >= startOfMonth }
+    }
+
+    func spentForCategory(_ category: TransactionCategory) -> Double {
+        currentMonthExpenses
+            .filter { $0.category == category }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    func budgetForCategory(_ category: TransactionCategory) -> BudgetCategory {
+        budgets.first { $0.category == category }
+            ?? BudgetCategory(category: category, monthlyLimit: 0)
+    }
+
+    func setBudget(category: TransactionCategory, limit: Double) {
+        if let index = budgets.firstIndex(where: { $0.category == category }) {
+            budgets[index].monthlyLimit = limit
+        } else {
+            budgets.append(BudgetCategory(category: category, monthlyLimit: limit))
+        }
     }
 
     var transactionsGroupedByDate: [(String, [Transaction])] {
@@ -126,6 +172,15 @@ final class FinanceStore {
         Account(bankName: "BCA", accountHolder: "Riyo", balance: 3_250_000, accountNumber: "•••• 1234"),
         Account(bankName: "BNI", accountHolder: "Riyo", balance: 1_100_000, accountNumber: "•••• 5678"),
         Account(bankName: "Mandiri", accountHolder: "Riyo", balance: 8_100_000, accountNumber: "•••• 9012"),
+    ]
+
+    static let defaultBudgets: [BudgetCategory] = [
+        BudgetCategory(id: UUID(), category: .food, monthlyLimit: 2_000_000),
+        BudgetCategory(id: UUID(), category: .transport, monthlyLimit: 1_000_000),
+        BudgetCategory(id: UUID(), category: .shopping, monthlyLimit: 1_500_000),
+        BudgetCategory(id: UUID(), category: .bills, monthlyLimit: 800_000),
+        BudgetCategory(id: UUID(), category: .entertainment, monthlyLimit: 500_000),
+        BudgetCategory(id: UUID(), category: .other, monthlyLimit: 400_000),
     ]
 
     static let defaultTransactions: [Transaction] = [

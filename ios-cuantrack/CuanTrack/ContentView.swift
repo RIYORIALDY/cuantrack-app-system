@@ -65,7 +65,7 @@ struct MainTabView: View {
                 .tag(AppTab.transactions)
 
                 NavigationStack {
-                    BudgetPlaceholderView()
+                    BudgetView(store: store)
                         .navigationTitle("Budget")
                         .navigationBarTitleDisplayMode(.large)
                 }
@@ -126,25 +126,7 @@ struct MainTabView: View {
     }
 }
 
-struct BudgetPlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.pie.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(Color(red: 0.15, green: 0.39, blue: 0.92).opacity(0.3))
 
-            Text("Fitur Budget")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color(red: 0.06, green: 0.09, blue: 0.16))
-
-            Text("Akan segera hadir")
-                .font(.system(size: 14))
-                .foregroundStyle(Color(red: 0.39, green: 0.45, blue: 0.55))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(red: 0.97, green: 0.98, blue: 0.99))
-    }
-}
 
 #Preview {
     ContentView()

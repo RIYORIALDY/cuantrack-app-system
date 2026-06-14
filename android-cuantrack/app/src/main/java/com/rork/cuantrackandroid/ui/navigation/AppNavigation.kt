@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rork.cuantrackandroid.data.AppViewModel
 import com.rork.cuantrackandroid.ui.screens.AddTransactionScreen
+import com.rork.cuantrackandroid.ui.screens.BudgetScreen
 import com.rork.cuantrackandroid.ui.screens.HomeScreen
 import com.rork.cuantrackandroid.ui.screens.LoginScreen
 import com.rork.cuantrackandroid.ui.screens.ProfileScreen
@@ -131,7 +132,7 @@ fun AppNavigation(viewModel: AppViewModel) {
                         onNavigateToProfile = { selectedTab = AppTab.PROFILE }
                     )
                     AppTab.TRANSACTIONS -> TransactionListScreen(viewModel = viewModel)
-                    AppTab.BUDGET -> BudgetPlaceholder()
+                    AppTab.BUDGET -> BudgetScreen(viewModel = viewModel)
                     AppTab.PROFILE -> ProfileScreen(
                         viewModel = viewModel,
                         onLogout = { viewModel.logout() }
@@ -165,34 +166,3 @@ fun AppNavigation(viewModel: AppViewModel) {
     }
 }
 
-@Composable
-private fun BudgetPlaceholder() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(CuanColors.Background),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Filled.PieChart,
-                contentDescription = null,
-                tint = CuanColors.Primary.copy(alpha = 0.3f),
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Fitur Budget",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = CuanColors.Text
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Akan segera hadir",
-                fontSize = 14.sp,
-                color = CuanColors.SecondaryText
-            )
-        }
-    }
-}

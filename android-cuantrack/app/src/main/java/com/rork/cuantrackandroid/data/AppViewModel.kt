@@ -3,6 +3,7 @@ package com.rork.cuantrackandroid.data
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rork.cuantrackandroid.models.Account
+import com.rork.cuantrackandroid.models.BudgetCategory
 import com.rork.cuantrackandroid.models.Transaction
 import com.rork.cuantrackandroid.models.TransactionCategory
 import com.rork.cuantrackandroid.models.TransactionType
@@ -14,10 +15,44 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
 
+fun defaultBudgets(): List<BudgetCategory> = listOf(
+    BudgetCategory(
+        id = UUID.fromString("bbbbbbbb-e5f6-7890-abcd-ef1234567890"),
+        category = TransactionCategory.FOOD,
+        monthlyLimit = 2_000_000.0
+    ),
+    BudgetCategory(
+        id = UUID.fromString("cccccccc-f6a7-8901-bcde-f12345678901"),
+        category = TransactionCategory.TRANSPORT,
+        monthlyLimit = 1_000_000.0
+    ),
+    BudgetCategory(
+        id = UUID.fromString("dddddddd-a7b8-9012-cdef-123456789012"),
+        category = TransactionCategory.SHOPPING,
+        monthlyLimit = 1_500_000.0
+    ),
+    BudgetCategory(
+        id = UUID.fromString("eeeeeeee-b8c9-0123-defa-bcdef1234567"),
+        category = TransactionCategory.BILLS,
+        monthlyLimit = 800_000.0
+    ),
+    BudgetCategory(
+        id = UUID.fromString("ffffffff-c9d0-1234-efab-cdef12345678"),
+        category = TransactionCategory.ENTERTAINMENT,
+        monthlyLimit = 500_000.0
+    ),
+    BudgetCategory(
+        id = UUID.fromString("aaaaaaaa-d0e1-2345-fabc-def123456789"),
+        category = TransactionCategory.OTHER,
+        monthlyLimit = 400_000.0
+    ),
+)
+
 data class AppUiState(
     val isAuthenticated: Boolean = false,
     val accounts: List<Account> = listOf(),
     val transactions: List<Transaction> = listOf(),
+    val budgets: List<BudgetCategory> = defaultBudgets(),
     val showToast: Boolean = false,
     val toastMessage: String = ""
 )
@@ -121,6 +156,62 @@ class AppViewModel : ViewModel() {
 
     val recentTransactions: List<Transaction>
         get() = _uiState.value.transactions.take(5)
+
+    val totalBudgeted: Double
+        get() = _uiState.value.budgets.sumOf { it.monthlyLimit }
+
+    val currentMonthExpenses: List<Transaction>
+        get() {
+            val now = java.time.YearMonth.now()
+            val startOfMonth = now.atDay(1).atStartOfDay(java.time.ZoneId.of("Asia/Jakarta")).toInstant()
+            return _uiState.value.transactions.filter {
+                it.type == TransactionType.EXPENSE && it.date >= startOfMonth
+            }
+        }
+
+    val totalSpentThisMonth: Double
+        get() = currentMonthExpenses.sumOf { it.amount }
+
+    val remainingBudget: Double
+        get() = totalBudgeted - totalSpentThisMonth
+
+    val budgetPercentUsed: Float
+        get() = if (totalBudgeted > 0) (totalSpentThisMonth / totalBudgeted).toFloat().coerceIn(0f, 1f) else 0f
+
+    fun spentForCategory(category: TransactionCategory): Double {
+        return currentMonthExpenses
+            .filter { it.category == category }
+            .sumOf { it.amount }
+    }
+
+    fun budgetForCategory(category: TransactionCategory): BudgetCategory {
+        return _uiState.value.budgets.find { it.category == category }
+            ?: BudgetCategory(category = category, monthlyLimit = 0.0)
+    }
+
+    fun budgetsWithSpent(): List<BudgetCategory> {
+        return _uiState.value.budgets.map { budget ->
+            budget.copy(spent = spentForCategory(budget.category))
+        }
+    }
+
+    fun setBudget(category: TransactionCategory, limit: Double) {
+        _uiState.update { state ->
+            val existing = state.budgets.indexOfFirst { it.category == category }
+            if (existing >= 0) {
+                val budgets = state.budgets.toMutableList()
+                budgets[existing] = budgets[existing].copy(monthlyLimit = limit)
+                state.copy(budgets = budgets)
+            } else {
+                state.copy(
+                    budgets = state.budgets + BudgetCategory(
+                        category = category,
+                        monthlyLimit = limit
+                    )
+                )
+            }
+        }
+    }
 
     val transactionsGroupedByDate: Map<String, List<Transaction>>
         get() {
